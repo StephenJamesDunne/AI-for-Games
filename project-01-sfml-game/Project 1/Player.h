@@ -16,6 +16,10 @@ public:
 private:
 	sf::Texture playerTexture;
 	sf::Sprite playerSprite{ playerTexture };
-	float movementSpeed{ 400.0f };
+	sf::Vector2f velocity;
+	float acceleration;
+	float deceleration;
+	float maxSpeed;
+	float rotationSpeed;
 	void wrapAroundScreen(sf::Vector2u windowSize);
 };
