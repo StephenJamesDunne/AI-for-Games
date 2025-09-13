@@ -74,11 +74,10 @@ void Game::update(sf::Time t_deltaTime)
 	checkKeyboardState();
 
 	player.handleInput(t_deltaTime);
-	enemy.handleInput(t_deltaTime);
 
 	sf::Vector2u windowSize = window.getSize();
 	player.update(windowSize);
-	enemy.update(windowSize);
+	enemy.update(windowSize, t_deltaTime);
 
 	if (exitGame)
 	{
