@@ -30,8 +30,8 @@ private:
 	sf::RenderWindow window; 
 	sf::Font font;
 	bool exitGame = false; 
-	Player player;
-	Enemy enemy;
+	Player* player;
+	Enemy* enemy;
 
 };
 

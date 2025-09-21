@@ -20,7 +20,7 @@ Enemy::Enemy(const std::string& textureFile)
     deceleration = 1200.0f;
     maxSpeed = 700.0f;
 
-    directionChangeDuration = sf::seconds(2.0f + static_cast<float>(rand()) / RAND_MAX * 3.0f);
+    directionChangeDuration = sf::seconds(3.0f);
     directionChangeTimer = sf::Time::Zero;
     generateNewRandomDirection();
 }
@@ -64,7 +64,7 @@ void Enemy::generateNewRandomDirection()
 {
     float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159265f;
     randomDirection = sf::Vector2f(cos(angle), sin(angle));
-    directionChangeDuration = sf::seconds(2.0f + static_cast<float>(rand()) / RAND_MAX * 3.0f);
+    directionChangeDuration = sf::seconds(2.5f);
     directionChangeTimer = sf::Time::Zero;
 }
 

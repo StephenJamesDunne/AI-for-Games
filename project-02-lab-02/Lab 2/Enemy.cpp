@@ -1,27 +1,21 @@
 #include "Enemy.h"
-#include <iostream>
+#include "Math.h"
 
-Enemy::Enemy(const std::string& textureFile)
+Enemy::Enemy(const std::string& textureFile) : Entity()
 {
-    if (!enemyTexture.loadFromFile(textureFile))
+    // Enemy specific movement values
+    acceleration = 2500.0f;
+    deceleration = 800.0f; 
+    maxSpeed = 300.0f;
+    directionChangeDuration = (sf::seconds(2.0f + static_cast<float>(rand()) / RAND_MAX * 3.0f));
+    directionChangeTimer = sf::Time::Zero;
+    
+    if (loadTexture(textureFile))
     {
-        std::cout << "Error loading enemy texture" << std::endl;
+        setPosition(sf::Vector2f(700.0f, 300.0f));
+        centerOrigin();
     }
 
-    enemySprite = sf::Sprite(enemyTexture);
-    enemySprite.setPosition(sf::Vector2f(700, 300));
-
-	// center the origin
-    sf::Vector2u textureSize = enemyTexture.getSize();
-    enemySprite.setOrigin(sf::Vector2f(textureSize.x / 2.0f, textureSize.y / 2.0f));
-
-    velocity = sf::Vector2f(0.0f, 0.0f);
-    acceleration = 3500.0f;
-    deceleration = 1200.0f;
-    maxSpeed = 700.0f;
-
-    directionChangeDuration = sf::seconds(2.0f + static_cast<float>(rand()) / RAND_MAX * 3.0f);
-    directionChangeTimer = sf::Time::Zero;
     generateNewRandomDirection();
 }
 
@@ -31,38 +25,38 @@ void Enemy::move(sf::Vector2f direction, sf::Time deltaTime)
 
     if (direction.x != 0 || direction.y != 0)
     {
+        // Apply acceleration in the given direction
         velocity += direction * acceleration * dt;
     }
-
-    // Clamp enemy velocity to max speed
-    float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-    if (speed > maxSpeed)
+    else
     {
-        velocity = (velocity / speed) * maxSpeed;
+        float currentSpeed = MathUtils::vectorLength(velocity);
+        if (currentSpeed > 0)
+        {
+            float decelerationAmount = deceleration * deltaTime.asSeconds();
+            float newSpeed = std::max(0.0f, currentSpeed - decelerationAmount);
+            velocity = MathUtils::normalize(velocity) * newSpeed;
+        }
     }
 
-    enemySprite.move(velocity * dt);
+    float speed = MathUtils::vectorLength(velocity);
+    if (speed > maxSpeed)
+    {
+        velocity = MathUtils::normalize(velocity) * maxSpeed;
+    }
+
+    sprite.move(velocity * deltaTime.asSeconds());
 }
 
 void Enemy::update(sf::Vector2u windowSize, sf::Time deltaTime)
 {
-	updateRandomMovement(deltaTime);
+    updateRandomMovement(deltaTime);
     wrapAroundScreen(windowSize);
-}
-
-void Enemy::draw(sf::RenderWindow& window)
-{
-    window.draw(enemySprite);
-}
-
-sf::Vector2f Enemy::getPosition() const
-{
-    return enemySprite.getPosition();
 }
 
 void Enemy::generateNewRandomDirection()
 {
-    float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159265f;
+    float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * MathUtils::PI;
     randomDirection = sf::Vector2f(cos(angle), sin(angle));
     directionChangeDuration = sf::seconds(2.0f + static_cast<float>(rand()) / RAND_MAX * 3.0f);
     directionChangeTimer = sf::Time::Zero;
@@ -72,7 +66,6 @@ void Enemy::updateRandomMovement(sf::Time deltaTime)
 {
     directionChangeTimer += deltaTime;
 
-    // change direction periodically
     if (directionChangeTimer >= directionChangeDuration)
     {
         generateNewRandomDirection();
@@ -80,34 +73,9 @@ void Enemy::updateRandomMovement(sf::Time deltaTime)
 
     move(randomDirection, deltaTime);
 
-
     if (randomDirection.x != 0 || randomDirection.y != 0)
     {
         sf::Angle targetAngle = sf::radians(std::atan2(randomDirection.y, randomDirection.x)) + sf::degrees(90.0f);
-        enemySprite.setRotation(targetAngle);
-    }
-}
-
-void Enemy::wrapAroundScreen(sf::Vector2u windowSize)
-{
-    sf::Vector2f position = enemySprite.getPosition();
-    sf::FloatRect bounds = enemySprite.getGlobalBounds();
-
-    if (position.x + bounds.size.x < 0) 
-    {
-        enemySprite.setPosition(sf::Vector2f(windowSize.x, position.y));
-    }
-    else if (position.x > windowSize.x) 
-    {
-        enemySprite.setPosition(sf::Vector2f(-bounds.size.x, position.y));
-    }
-
-    if (position.y + bounds.size.y < 0) 
-    {
-        enemySprite.setPosition(sf::Vector2f(position.x, windowSize.y));
-    }
-    else if (position.y > windowSize.y) 
-    {
-        enemySprite.setPosition(sf::Vector2f(position.x, -bounds.size.y));
+        getSprite().setRotation(targetAngle);
     }
 }

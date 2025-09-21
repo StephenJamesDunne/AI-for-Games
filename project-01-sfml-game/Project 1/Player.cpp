@@ -25,7 +25,7 @@ Player::Player(const std::string& textureFile)
 void Player::handleInput(sf::Time deltaTime)
 {
 	float dt = deltaTime.asSeconds();
-    sf::Vector2f inputDirection(0.0f, 0.0f);
+    sf::Vector2f inputDirection(0.0f, 0.0f); // Reinitialized each frame for fresh inputs
 
     // Rotation logic
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
@@ -47,7 +47,7 @@ void Player::handleInput(sf::Time deltaTime)
     if (inputDirection.y != 0)
     {
         sf::Angle rotation = playerSprite.getRotation();
-		sf::Angle adjustedRotation = rotation + sf::degrees(90.0f);
+		sf::Angle adjustedRotation = rotation + sf::degrees(90.0f); // accounting for SFML sprite default orientation
 
         float cos_r = std::cos(adjustedRotation.asRadians());
         float sin_r = std::sin(adjustedRotation.asRadians());
@@ -78,7 +78,7 @@ void Player::move(sf::Vector2f direction, sf::Time deltaTime)
         if (currentSpeed > 0)
         {
             float decelerationAmount = deceleration * dt;
-            float newSpeed = std::max(0.0f, currentSpeed - decelerationAmount);
+            float newSpeed = std::max(0.0f, currentSpeed - decelerationAmount); // prevent negative speed
 
 			// adjust speed while maintaining direction
             velocity = (velocity / currentSpeed) * newSpeed;

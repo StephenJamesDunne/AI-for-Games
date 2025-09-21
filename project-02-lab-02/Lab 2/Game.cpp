@@ -3,15 +3,21 @@
 #include <filesystem>
 
 
-Game::Game() : player("ASSETS\\IMAGES\\player.png"), enemy("ASSETS\\IMAGES\\enemy.png")
+Game::Game()
 {
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::Vector2u windowSize = { desktop.size.x / 2, desktop.size.y / 2 };
 	window.create(sf::VideoMode(windowSize), "Lab 2");
+	
+	// instantiate player and enemy
+	player = new Player("ASSETS/IMAGES/player.png");
+	enemy = new Enemy("ASSETS/IMAGES/enemy.png");
 }
 
 Game::~Game()
 {
+	delete player;
+	delete enemy;
 }
 
 void Game::run()
@@ -73,11 +79,11 @@ void Game::update(sf::Time t_deltaTime)
 {
 	checkKeyboardState();
 
-	player.handleInput(t_deltaTime);
+	player->handleInput(t_deltaTime);
 
 	sf::Vector2u windowSize = window.getSize();
-	player.update(windowSize);
-	enemy.update(windowSize, t_deltaTime);
+	player->update(windowSize, t_deltaTime);
+	enemy->update(windowSize, t_deltaTime);
 
 	if (exitGame)
 	{
@@ -90,8 +96,8 @@ void Game::render()
 {
 	window.clear(sf::Color::Black);
 
-	player.draw(window);
-	enemy.draw(window);
+	player->draw(window);
+	enemy->draw(window);
 	
 	window.display();
 }
