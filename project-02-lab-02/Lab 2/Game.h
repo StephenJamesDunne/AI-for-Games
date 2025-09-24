@@ -12,6 +12,7 @@
 #include <SFML/Window.hpp>
 #include "Player.h"
 #include "Enemy.h"
+#include <vector>
 
 class Game
 {
@@ -29,9 +30,18 @@ private:
 
 	sf::RenderWindow window; 
 	sf::Font font;
+	sf::Text enemyBehaviourText{font};
+	sf::Text instructionsText{ font };
 	bool exitGame = false; 
 	Player* player;
-	Enemy* enemy;
+	std::vector<std::unique_ptr<Enemy>> enemies;
+
+	std::vector<bool> enemyActiveStates;
+	std::vector<std::unique_ptr<SteeringBehaviour>> enemyBehaviours;
+
+	std::vector<sf::CircleShape> stars;
+	void generateStars();
+	void toggleEnemy(int enemyIndex);
 
 };
 

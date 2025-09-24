@@ -10,7 +10,7 @@ Player::Player(const std::string& textureFile) : Entity()
 
     if (loadTexture(textureFile))
     {
-        setPosition(sf::Vector2f(100.0f, 100.0f));
+        setPosition(sf::Vector2f(100.0f, 200.0f));
         centerOrigin();
     }
 }

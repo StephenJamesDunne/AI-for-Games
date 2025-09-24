@@ -17,6 +17,7 @@ public:
 	// getters for sprite to allow access in main for rotation
     sf::Sprite& getSprite() { return sprite; }
     const sf::Sprite& getSprite() const { return sprite; }
+	sf::Vector2f getVelocity() const { return velocity; }
 
 protected:
     // common values

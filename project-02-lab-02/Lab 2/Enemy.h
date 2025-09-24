@@ -1,19 +1,32 @@
 #pragma once
 #include "Entity.h"
+#include "SteeringBehaviour.h"
+#include "SteeringOutput.h"
+#include <memory>
 
 class Enemy : public Entity
 {
 public:
-    Enemy(const std::string& textureFile);
+    Enemy(const std::string& textureFile, std::unique_ptr<SteeringBehaviour> behaviour = nullptr);
 
     void move(sf::Vector2f direction, sf::Time deltaTime) override;
     void update(sf::Vector2u windowSize, sf::Time deltaTime) override;
+    void draw(sf::RenderWindow& window) override; 
+
+	// function for dynamically changing steering behaviour at runtime
+	void setSteeringBehaviour(std::unique_ptr<SteeringBehaviour> behaviour);
+    bool canSeePlayer(const sf::Vector2f& playerPosition);
+    void setVisionConeColor(sf::Color color) { visionCone.setFillColor(color); }
+
+    std::string getBehaviourName() const;
 
 private:
-    sf::Vector2f randomDirection;
-    sf::Time directionChangeTimer;
-    sf::Time directionChangeDuration;
+	std::unique_ptr<SteeringBehaviour> steeringBehaviour;
 
-    void updateRandomMovement(sf::Time deltaTime);
-    void generateNewRandomDirection();
+    sf::ConvexShape visionCone; // Vision cone shape for visualization
+    float visionRange;
+    float visionAngle;
+
+    void createVisionCone();
+    void updateVisionCone();
 };
