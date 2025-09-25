@@ -8,7 +8,7 @@
 Game::Game()
 {
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-	sf::Vector2u windowSize = { 1280, 720 };
+	sf::Vector2u windowSize = { 1920, 1080 };
 	window.create(sf::VideoMode(windowSize), "Lab 2");
 
 	if (!font.openFromFile("ASSETS/FONTS/Jersey20-Regular.ttf"))
