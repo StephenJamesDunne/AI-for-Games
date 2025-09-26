@@ -1,13 +1,13 @@
 #include "Enemy.h"
 #include "Math.h"
 
-Enemy::Enemy(const std::string& textureFile, std::unique_ptr<SteeringBehaviour> behaviour) : Entity(),
+Enemy::Enemy(const std::string& textureFile, std::unique_ptr<SteeringBehaviour> behaviour, float customMaxSpeed) : Entity(),
 steeringBehaviour(std::move(behaviour))
 {
     // Enemy specific movement values
     acceleration = 2500.0f;
     deceleration = 800.0f; 
-    maxSpeed = 300.0f;
+    maxSpeed = customMaxSpeed;
 
     // Vision cone params
     visionRange = 200.0f;
@@ -29,10 +29,11 @@ void Enemy::move(sf::Vector2f direction, sf::Time deltaTime)
     velocity += direction * dt;
 
     float speed = MathUtils::vectorLength(velocity);
-    //if (speed > maxSpeed)
-    //{
-    //    velocity = MathUtils::normalize(velocity) * maxSpeed;
-    //}
+    
+    if (speed > maxSpeed)
+    {
+       velocity = MathUtils::normalize(velocity) * maxSpeed;
+    }
 
     sprite.move(velocity * dt);
 

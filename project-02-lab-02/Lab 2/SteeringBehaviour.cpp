@@ -73,7 +73,7 @@ SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
     if (distance < targetRadius)
     {
         sf::Vector2f currentVelocity = entity.getVelocity();
-		steering.linear = -currentVelocity * 5.0f;
+		steering.linear = -currentVelocity * 10.0f;
         steering.angular = 0.0f;
         return steering;
 	}
@@ -86,9 +86,9 @@ SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
     else
     {
 		float speedRatio = distance / slowingRadius;
-		targetSpeed = maxSpeed * speedRatio;
-        
-        float minSpeed = maxSpeed * 0.1f;
+		targetSpeed = maxSpeed * speedRatio * speedRatio;
+
+        float minSpeed = maxSpeed * 0.2f;
 		targetSpeed = std::max(targetSpeed, minSpeed);
 	}
 

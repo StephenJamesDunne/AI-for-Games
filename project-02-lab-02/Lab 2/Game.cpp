@@ -35,11 +35,11 @@ Game::Game()
 	// instantiate player and enemy
 	player = new Player("ASSETS/IMAGES/player.png");
 
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy.png", std::make_unique<Seek>(player, 800)));
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", std::make_unique<Arrive>(player, 2500, 1200, 800, 50))); // arrive fast
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", std::make_unique<Arrive>(player, 100, 60, 500, 50)));  // arrive slow
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy4.png", std::make_unique<Wander>(100, 2.0f)));
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy5.png", std::make_unique<Pursue>(player, 1500, 3.0f)));
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy.png", std::make_unique<Seek>(player, 800), 300.0f));
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", std::make_unique<Arrive>(player, 2500, 1200, 800, 100), 500.0f)); // arrive fast
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", std::make_unique<Arrive>(player, 1000, 600, 800, 100), 350.0f));  // arrive slow
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy4.png", std::make_unique<Wander>(100, 2.0f), 250.0f));
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy5.png", std::make_unique<Pursue>(player, 1500, 3.0f), 400.0f));
 
 	// all enemies start active
 	enemyActiveStates.resize(enemies.size(), true);
@@ -170,16 +170,16 @@ void Game::toggleEnemy(int enemyIndex)
                 enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Seek>(player, 800));
                 break;
             case 1:
-				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 1500, 400, 300, 50)); // arrive fast
+				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 2500, 1200, 800, 100)); // arrive fast
                 break;
             case 2:
-				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 300, 200, 400, 50));	// arrive slow
+				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 1000, 600, 800, 100));	// arrive slow
                 break;
             case 3:
                 enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Wander>(100, 2.0f));
                 break;
             case 4:
-                enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Pursue>(player, 1000, 3.0f));
+                enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Pursue>(player, 1500, 3.0f));
                 break;
             }
             std::cout << "Enemy " << (enemyIndex + 1) << " reactivated" << std::endl;

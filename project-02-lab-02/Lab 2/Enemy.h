@@ -7,7 +7,7 @@
 class Enemy : public Entity
 {
 public:
-    Enemy(const std::string& textureFile, std::unique_ptr<SteeringBehaviour> behaviour = nullptr);
+    Enemy(const std::string& textureFile, std::unique_ptr<SteeringBehaviour> behaviour = nullptr, float customMaxSpeed = 300.0f);
 
     void move(sf::Vector2f direction, sf::Time deltaTime) override;
     void update(sf::Vector2u windowSize, sf::Time deltaTime) override;
