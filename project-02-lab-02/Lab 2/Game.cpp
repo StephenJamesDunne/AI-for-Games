@@ -200,7 +200,7 @@ void Game::update(sf::Time t_deltaTime)
 	{
 		enemy->update(windowSize, t_deltaTime);
 
-		if (enemy->canSeePlayer(player->getPosition()))
+		if (enemy->canSeePlayer(player->getSprite()))
 		{
 			enemy->setVisionConeColor(sf::Color(255, 0, 0, 80));
 		}

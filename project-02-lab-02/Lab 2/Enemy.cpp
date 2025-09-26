@@ -87,11 +87,21 @@ void Enemy::updateVisionCone()
     visionCone.setRotation(getSprite().getRotation());
 }
 
-bool Enemy::canSeePlayer(const sf::Vector2f& playerPosition)
+bool Enemy::canSeePlayer(const sf::Sprite& playerSprite)
 {
-    sf::Vector2f toPlayer = playerPosition - getPosition();
+	// Function adjusted to take the player's sprite, instead of a single point in its position, for accuracy
+    sf::FloatRect playerBounds = playerSprite.getGlobalBounds();
+
+    sf::Vector2f playerCenter(
+        playerBounds.position.x + playerBounds.size.x * 0.5f,
+        playerBounds.position.y + playerBounds.size.y * 0.5f
+    );
+
+
+    sf::Vector2f toPlayer = playerCenter - getPosition();
     float distanceToPlayer = MathUtils::vectorLength(toPlayer);
-    
+
+    // Not in range, so ignore checks below this until this is true
     if (distanceToPlayer > visionRange || distanceToPlayer < 1.0f)
         return false;
 
@@ -100,6 +110,7 @@ bool Enemy::canSeePlayer(const sf::Vector2f& playerPosition)
     float enemyAngle = getSprite().getRotation().asRadians() - MathUtils::PI / 2.0f;
     sf::Vector2f enemyDirection(std::cos(enemyAngle), std::sin(enemyAngle));
 
+    // Dot product to check against vision cone
     float dotProduct = MathUtils::dotProduct(toPlayer, enemyDirection);
     float angleThreshold = std::cos(MathUtils::toRadians(visionAngle) / 2.0f);
 

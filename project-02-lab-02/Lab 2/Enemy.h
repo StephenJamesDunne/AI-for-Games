@@ -15,7 +15,7 @@ public:
 
 	// function for dynamically changing steering behaviour at runtime
 	void setSteeringBehaviour(std::unique_ptr<SteeringBehaviour> behaviour);
-    bool canSeePlayer(const sf::Vector2f& playerPosition);
+    bool canSeePlayer(const sf::Sprite& playerSprite);
     void setVisionConeColor(sf::Color color) { visionCone.setFillColor(color); }
 
     std::string getBehaviourName() const;
