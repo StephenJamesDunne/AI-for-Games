@@ -5,12 +5,12 @@ Player::Player(const std::string& textureFile) : Entity()
 {
     acceleration = 4000.0f;
     deceleration = 1500.0f;
-    maxSpeed = 500.0f;
+    maxSpeed = 10.0f;
     rotationSpeed = 180.0f;
 
     if (loadTexture(textureFile))
     {
-        setPosition(sf::Vector2f(100.0f, 200.0f));
+        setPosition(sf::Vector2f(100.0f, 500.0f));
         centerOrigin();
     }
 }
@@ -79,7 +79,7 @@ void Player::move(sf::Vector2f direction, sf::Time deltaTime)
         velocity = MathUtils::normalize(velocity) * maxSpeed;
     }
     
-    getSprite().move(velocity * deltaTime.asSeconds());
+    getSprite().move(velocity);
 }
 
 void Player::update(sf::Vector2u windowSize, sf::Time deltaTime)

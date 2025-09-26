@@ -16,9 +16,9 @@ Game::Game()
 		std::cout << "Font failed to load!" << std::endl;
 	}
 
-	instructionsText.setString("Press 1-5 to toggle enemies\nPress ESC to exit");
+	instructionsText.setString("Press 1-5 to toggle enemies:\n1 - Toggle Seek\n2 - Toggle Fast Arrive\n3 - Toggle Slow Arrive\n4 - Toggle Wander\n5 - Toggle Pursue\nPress ESC to exit");
 	instructionsText.setFont(font);
-	instructionsText.setCharacterSize(24);
+	instructionsText.setCharacterSize(32);
 	instructionsText.setFillColor(sf::Color::White);
 	instructionsText.setOutlineColor(sf::Color::Black);
 	instructionsText.setOutlineThickness(1.0f);
@@ -36,8 +36,8 @@ Game::Game()
 	player = new Player("ASSETS/IMAGES/player.png");
 
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy.png", std::make_unique<Seek>(player, 800)));
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", std::make_unique<Arrive>(player, 1200, 600, 100)));
-	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", std::make_unique<Arrive>(player, 300, 600, 100)));
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", std::make_unique<Arrive>(player, 2500, 1200, 800, 50))); // arrive fast
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", std::make_unique<Arrive>(player, 100, 60, 500, 50)));  // arrive slow
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy4.png", std::make_unique<Wander>(100, 2.0f)));
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy5.png", std::make_unique<Pursue>(player, 1500, 3.0f)));
 
@@ -46,8 +46,8 @@ Game::Game()
 
 	// stored behaviours for toggling back on
 	enemyBehaviours.push_back(std::make_unique<Seek>(player, 800));
-	enemyBehaviours.push_back(std::make_unique<Arrive>(player, 1200, 600, 100));
-	enemyBehaviours.push_back(std::make_unique<Arrive>(player, 300, 600, 100));
+	enemyBehaviours.push_back(std::make_unique<Arrive>(player, 1500, 400, 300, 50));
+	enemyBehaviours.push_back(std::make_unique<Arrive>(player, 300, 200, 400, 50));
 	enemyBehaviours.push_back(std::make_unique<Wander>(100, 2.0f));
 	enemyBehaviours.push_back(std::make_unique<Pursue>(player, 1500, 3.0f));
 
@@ -170,10 +170,10 @@ void Game::toggleEnemy(int enemyIndex)
                 enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Seek>(player, 800));
                 break;
             case 1:
-                enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 800, 600, 100));
+				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 1500, 400, 300, 50)); // arrive fast
                 break;
             case 2:
-                enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 300, 600, 100));
+				enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Arrive>(player, 300, 200, 400, 50));	// arrive slow
                 break;
             case 3:
                 enemies[enemyIndex]->setSteeringBehaviour(std::make_unique<Wander>(100, 2.0f));

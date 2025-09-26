@@ -29,10 +29,10 @@ void Enemy::move(sf::Vector2f direction, sf::Time deltaTime)
     velocity += direction * dt;
 
     float speed = MathUtils::vectorLength(velocity);
-    if (speed > maxSpeed)
-    {
-        velocity = MathUtils::normalize(velocity) * maxSpeed;
-    }
+    //if (speed > maxSpeed)
+    //{
+    //    velocity = MathUtils::normalize(velocity) * maxSpeed;
+    //}
 
     sprite.move(velocity * dt);
 

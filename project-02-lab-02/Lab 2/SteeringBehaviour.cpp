@@ -1,6 +1,7 @@
 #include "SteeringBehaviour.h"
 #include "Entity.h"
 #include "Math.h"
+#include <iostream>
 
 // Seek implementation
 Seek::Seek(const Entity* target, float maxAcceleration) : 
@@ -55,12 +56,12 @@ void Wander::generateNewDirection()
 
 
 // Arrive implementation
-Arrive::Arrive(const Entity* target, float maxAcceleration, float slowingRadius, float targetRadius) : 
+Arrive::Arrive(const Entity* target, float maxAcceleration, float maxSpeed, float slowingRadius, float targetRadius) : 
     target(target),
     maxAcceleration(maxAcceleration), 
     slowingRadius(slowingRadius),
     targetRadius(targetRadius),
-    maxSpeed(1200.0f) {}
+    maxSpeed(maxSpeed) {}
 
 SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
 {
@@ -72,7 +73,7 @@ SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
     if (distance < targetRadius)
     {
         sf::Vector2f currentVelocity = entity.getVelocity();
-		steering.linear = -currentVelocity * 5.0f; // Stronger braking for an immediate stop
+		steering.linear = -currentVelocity * 5.0f;
         steering.angular = 0.0f;
         return steering;
 	}
@@ -86,7 +87,9 @@ SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
     {
 		float speedRatio = distance / slowingRadius;
 		targetSpeed = maxSpeed * speedRatio;
-        targetSpeed = std::max(targetSpeed, maxSpeed * 0.1f);
+        
+        float minSpeed = maxSpeed * 0.1f;
+		targetSpeed = std::max(targetSpeed, minSpeed);
 	}
 
     sf::Vector2f targetVelocity = MathUtils::normalize(direction) * targetSpeed;
@@ -99,17 +102,19 @@ SteeringOutput Arrive::getSteering(const Entity& entity, sf::Time deltaTime)
     if (steeringMagnitude > maxAcceleration)
     {
         steering.linear = MathUtils::normalize(steering.linear) * maxAcceleration;
+		
     }
+
 	steering.angular = 0.0f;
 
 	return steering;
 }
 
 // Pursue implementation
-Pursue::Pursue(const Entity* target, float maxAcceleration, float maxPrediction) : 
+Pursue::Pursue(const Entity* target, float maxAcceleration, float maxPredictionTime) : 
     target(target), 
     maxAcceleration(maxAcceleration), 
-	maxPrediction(maxPrediction) {
+	maxPredictionTime(maxPredictionTime) {
 }
 
 SteeringOutput Pursue::getSteering(const Entity& entity, sf::Time deltaTime) 
@@ -117,28 +122,28 @@ SteeringOutput Pursue::getSteering(const Entity& entity, sf::Time deltaTime)
     SteeringOutput steering;
     
     sf::Vector2f toTarget = target->getPosition() - entity.getPosition();
-    float distance = MathUtils::vectorLength(toTarget);
+    float distanceToTarget = MathUtils::vectorLength(toTarget);
 
     sf::Vector2f entityVelocity = entity.getVelocity();
     sf::Vector2f targetVelocity = target->getVelocity();
     float entitySpeed = MathUtils::vectorLength(entityVelocity);
     
-    float prediction;
+    float predictionTime;
 
 	// Calculate prediction time by comparing distance to pursuer's speed
     // DST: if the enemy is moving too slowly, use maxPrediction time
     // DST: if the enemy is moving too fast, reduce prediction time
-    if (entitySpeed <= distance / maxPrediction) 
+    if (entitySpeed <= distanceToTarget / maxPredictionTime) 
     {
-        prediction = maxPrediction;
+        predictionTime = maxPredictionTime;
     } 
     else 
     {
-        prediction = distance / entitySpeed;
+        predictionTime = distanceToTarget / entitySpeed;
 	}
     
     // Calculate predicted target position
-    sf::Vector2f predictedPosition = target->getPosition() + targetVelocity * prediction;
+    sf::Vector2f predictedPosition = target->getPosition() + targetVelocity * predictionTime;
 
     // Seek to predicted position
     sf::Vector2f direction = predictedPosition - entity.getPosition();

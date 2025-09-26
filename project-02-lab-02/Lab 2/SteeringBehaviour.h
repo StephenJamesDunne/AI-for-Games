@@ -40,7 +40,7 @@ private:
 class Arrive : public SteeringBehaviour
 {
 public:
-    Arrive(const Entity* target, float maxAcceleration = 1200.0f, float slowingRadius = 200.0f, float targetRadius = 10.0f);
+    Arrive(const Entity* target, float maxAcceleration, float maxSpeed, float slowingRadius, float targetRadius);
     SteeringOutput getSteering(const Entity& entity, sf::Time deltaTime) override;
 
 
@@ -61,5 +61,5 @@ public:
 private:
     const Entity* target;
     float maxAcceleration;
-    float maxPrediction; // Maximum prediction time
+    float maxPredictionTime;
 };
