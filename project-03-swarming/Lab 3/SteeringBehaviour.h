@@ -1,8 +1,10 @@
 #pragma once
 #include "SteeringOutput.h"
 #include <SFML/Graphics.hpp>
+#include <vector>
 
 class Entity; // Forward declaration to avoid circular dependency
+class NPC;    // Forward declaration for NPC class
 
 class SteeringBehaviour
 {
@@ -62,4 +64,29 @@ private:
     const Entity* target;
     float maxAcceleration;
     float maxPredictionTime;
+};
+
+class LennardJonesSwarm : public SteeringBehaviour
+{
+public:
+    LennardJonesSwarm(
+        const std::vector<NPC*>* swarm,
+        float attractionConstant = 100.0f, // attraction constant
+		float repulsionConstant = 500.0f, // repulsion constant
+		float attractionExponent = 1.0f,      // attraction exponent
+		float repulsionExponent = 2.0f,      // repulsion exponent
+        float maxAcceleration = 800.0f
+        );
+
+	SteeringOutput getSteering(const Entity& entity, sf::Time deltaTime) override;
+
+private:
+    const std::vector<NPC*>* swarm;
+    float attractionConstant; 
+    float repulsionConstant; 
+    float attractionExponent; 
+    float repulsionExponent; 
+	float maxAcceleration;
+
+    sf::Vector2f calculateLJForce(const sf::Vector2f& pos1, const sf::Vector2f& pos2) const;
 };

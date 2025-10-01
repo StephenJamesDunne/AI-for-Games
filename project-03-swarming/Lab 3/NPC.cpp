@@ -1,17 +1,36 @@
 #include "NPC.h"
+#include "Math.h"
 
 NPC::NPC(const std::string& textureFile) : Entity()
 {
-	
+	if (loadTexture(textureFile))
+	{
+		centerOrigin();
+	}
 }
 
 void NPC::move(sf::Vector2f direction, sf::Time deltaTime)
 {
-	// Swarming behavior to be implemented
+    float dt = deltaTime.asSeconds();
+	
+    velocity += direction * dt;
+    
+    getSprite().move(velocity * dt);
 }
 
 void NPC::update(sf::Vector2u windowSize, sf::Time deltaTime)
 {
-	// Calls to move() swarming function to be implemented
+    if (steeringBehavior != nullptr)
+    {
+        SteeringOutput steering = steeringBehavior->getSteering(*this, deltaTime);
+        
+        move(steering.linear, deltaTime);
+    }
+
+	//wrapAroundScreen(windowSize);
 }
 
+void NPC::setSteeringBehavior(SteeringBehaviour* behavior)
+{
+	steeringBehavior = behavior;
+}

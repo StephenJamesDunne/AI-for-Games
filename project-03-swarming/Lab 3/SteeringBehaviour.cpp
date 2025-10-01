@@ -1,7 +1,9 @@
 #include "SteeringBehaviour.h"
 #include "Entity.h"
+#include "NPC.h"
 #include "Math.h"
 #include <iostream>
+#include <cmath>
 
 // Seek implementation
 Seek::Seek(const Entity* target, float maxAcceleration) : 
@@ -160,4 +162,72 @@ SteeringOutput Pursue::getSteering(const Entity& entity, sf::Time deltaTime)
     steering.angular = 0.0f;
 
     return steering;
+}
+
+// Lennard-Jones implementation
+LennardJonesSwarm::LennardJonesSwarm(
+    const std::vector<NPC*>* swarm,
+    float attractionConstant,
+    float repulsionConstant,
+    float attractionExponent,
+    float repulsionExponent,
+    float maxAcceleration) :
+    swarm(swarm),
+    attractionConstant(attractionConstant),
+    repulsionConstant(repulsionConstant),
+    attractionExponent(attractionExponent),
+    repulsionExponent(repulsionExponent),
+    maxAcceleration(maxAcceleration) {
+}
+
+SteeringOutput LennardJonesSwarm::getSteering(const Entity& entity, sf::Time deltaTime) 
+{
+    SteeringOutput steering;
+    sf::Vector2f totalForce(0.0f, 0.0f);
+
+    sf::Vector2f currentPos = entity.getPosition();
+
+    for (const NPC* other : *swarm)
+    {
+        // skip self if targeted in loop
+        if (&entity == other)
+            continue;
+
+        sf::Vector2f otherPos = other->getPosition();
+        sf::Vector2f force = calculateLJForce(currentPos, otherPos);
+        totalForce += force;
+    }
+
+    // Clamp total force to maxAcceleration
+    float forceMagnitude = MathUtils::vectorLength(totalForce);
+    if (forceMagnitude > maxAcceleration)
+    {
+        totalForce = MathUtils::normalize(totalForce) * maxAcceleration;
+    }
+
+    steering.linear = totalForce;
+    steering.angular = 0.0f;
+
+    return steering;
+}
+
+sf::Vector2f LennardJonesSwarm::calculateLJForce(const sf::Vector2f& pos1, const sf::Vector2f& pos2) const
+{
+    sf::Vector2f direction = pos1 - pos2;
+    float distance = MathUtils::vectorLength(direction);
+
+	const float minDistance = 2.0f; // to prevent division by zero
+    if (distance < minDistance)
+    {
+		distance = minDistance;
+    }
+
+    // Calculate Lennard-Jones force
+    float attractionMagnitude = -attractionConstant / std::pow(distance, attractionExponent);
+    float repulsionMagnitude = repulsionConstant / std::pow(distance, repulsionExponent);
+	float potential = attractionMagnitude + repulsionMagnitude;
+
+    sf::Vector2f normalizedDirection = MathUtils::normalize(direction);
+
+	return normalizedDirection * potential;
 }

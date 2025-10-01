@@ -10,8 +10,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Window.hpp>
+#include "SteeringBehaviour.h"
 #include "Player.h"
+#include "NPC.h"
 #include <vector>
+
 
 class Game
 {
@@ -33,9 +36,14 @@ private:
 	sf::Text instructionsText{ font };
 	bool exitGame = false; 
 	//Player* player;
+	std::vector<NPC*> npcs;
+	LennardJonesSwarm* ljSwarmBehavior;
+
 
 	std::vector<sf::CircleShape> stars;
 	void generateStars();
+	void initializeSwarm();
+	void cleanupSwarm();
 
 };
 

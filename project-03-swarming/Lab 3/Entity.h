@@ -19,6 +19,8 @@ public:
     const sf::Sprite& getSprite() const { return sprite; }
 	sf::Vector2f getVelocity() const { return velocity; }
 
+    void setPosition(sf::Vector2f position);
+
 protected:
     // common values
     sf::Texture texture;
@@ -32,5 +34,4 @@ protected:
     void wrapAroundScreen(sf::Vector2u windowSize);
     void centerOrigin();
 	bool loadTexture(const std::string& textureFile);
-    void setPosition(sf::Vector2f position);
 };
