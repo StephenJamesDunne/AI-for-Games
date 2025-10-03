@@ -58,14 +58,14 @@ void Game::initializeSwarm()
 {
 	ljSwarmBehavior = new LennardJonesSwarm(
 		&npcs, 
-		5000.0f, 
-		10000.0f, 
-		1.0f, 
-		2.0f, 
-		500.0f
+		5000.0f,			 // attraction constant
+		10000.0f, 			 // repulsion constant
+		1.2f, 				 // attraction exponent
+		1.5f, 				 // repulsion exponent
+		650.0f
 	);
 
-	int swarmSize = 100;
+	int swarmSize = 200;
 	sf::Vector2u windowSize = window.getSize();
 
 	float spawnWidth = 200.0f;
