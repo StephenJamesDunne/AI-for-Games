@@ -37,16 +37,13 @@ Game::Game()
 
 	// Create three NPCs using Formation behavior with player as leader
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy.png", 
-    	std::make_unique<Formation>(player, Formation::Position::LEFT_WING), 300.0f));
+    	std::make_unique<Formation>(player, Formation::Position::LEFT_WING), 400.0f));
 
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", 
-    	std::make_unique<Formation>(player, Formation::Position::RIGHT_WING), 350.0f));
+    	std::make_unique<Formation>(player, Formation::Position::RIGHT_WING), 400.0f));
 
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", 
-    	std::make_unique<Formation>(player, Formation::Position::TAIL, 
-        	Formation::DEFAULT_MAX_ACCELERATION, Formation::DEFAULT_MAX_SPEED,
-        	Formation::DEFAULT_SLOWING_RADIUS, Formation::DEFAULT_TARGET_RADIUS,
-        	Formation::DEFAULT_TAIL_OFFSET), 400.0f));
+    	std::make_unique<Formation>(player, Formation::Position::TAIL), 400.0f));
 
     // all enemies start active
     enemyActiveStates.resize(enemies.size(), true);

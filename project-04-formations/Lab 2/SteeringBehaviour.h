@@ -81,9 +81,9 @@ public:
     static constexpr float DEFAULT_MAX_SPEED = 600.0f;
     static constexpr float DEFAULT_SLOWING_RADIUS = 120.0f;
     static constexpr float DEFAULT_TARGET_RADIUS = 25.0f;
-    static constexpr float DEFAULT_LEFT_WING_OFFSET = 100.0f;
-    static constexpr float DEFAULT_RIGHT_WING_OFFSET = 100.0f;
-    static constexpr float DEFAULT_TAIL_OFFSET = 120.0f;
+    static constexpr float DEFAULT_LEFT_WING_OFFSET = 120.0f;
+    static constexpr float DEFAULT_RIGHT_WING_OFFSET = 120.0f;
+    static constexpr float DEFAULT_TAIL_OFFSET = 180.0f;
 
     Formation(const Entity* leader, Position formationPosition, 
               float maxAcceleration = DEFAULT_MAX_ACCELERATION, 
