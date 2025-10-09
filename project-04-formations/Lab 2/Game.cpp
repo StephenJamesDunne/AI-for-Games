@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "SteeringBehaviour.h"
 #include <iostream>
 #include <filesystem>
 #include <cstdlib>
@@ -8,13 +9,14 @@ Game::Game()
 {
 	sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 	sf::Vector2u windowSize = { 1920, 1080 };
-	window.create(sf::VideoMode(windowSize), "Lab 3");
+	window.create(sf::VideoMode(windowSize), "Lab 4");
 
 	if (!font.openFromFile("ASSETS/FONTS/Jersey20-Regular.ttf"))
 	{
 		std::cout << "Font failed to load!" << std::endl;
 	}
 
+	instructionsText.setString("Formation Showcase - NPC ships will form finger-4 formation with Player as the leader.\nUse WASD to control the player.\nPress ESC to exit");
 	instructionsText.setFont(font);
 	instructionsText.setCharacterSize(32);
 	instructionsText.setFillColor(sf::Color::White);
@@ -22,15 +24,37 @@ Game::Game()
 	instructionsText.setOutlineThickness(1.0f);
 	instructionsText.setPosition(sf::Vector2f(10.0f, 10.0f));
 
-	//generateStars();
+	enemyBehaviourText.setFont(font);
+	enemyBehaviourText.setCharacterSize(24);
+	enemyBehaviourText.setFillColor(sf::Color::White);
+	enemyBehaviourText.setOutlineColor(sf::Color::Black);
+	enemyBehaviourText.setOutlineThickness(1.0f);
 
-	initializeSwarm();
+	generateStars();
+	
+	// instantiate player and enemy
+	player = new Player("ASSETS/IMAGES/player.png");
+
+	// Create three NPCs using Formation behavior with player as leader
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy.png", 
+    	std::make_unique<Formation>(player, Formation::Position::LEFT_WING), 300.0f));
+
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy2.png", 
+    	std::make_unique<Formation>(player, Formation::Position::RIGHT_WING), 350.0f));
+
+	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", 
+    	std::make_unique<Formation>(player, Formation::Position::TAIL, 
+        	Formation::DEFAULT_MAX_ACCELERATION, Formation::DEFAULT_MAX_SPEED,
+        	Formation::DEFAULT_SLOWING_RADIUS, Formation::DEFAULT_TARGET_RADIUS,
+        	Formation::DEFAULT_TAIL_OFFSET), 400.0f));
+
+    // all enemies start active
+    enemyActiveStates.resize(enemies.size(), true);
 }
 
 Game::~Game()
 {
-	//delete player;
-	cleanupSwarm();
+	delete player;
 }
 
 void Game::generateStars()
@@ -52,50 +76,6 @@ void Game::generateStars()
 		star.setFillColor(sf::Color::White);
 		stars.push_back(star);
 	}
-}
-
-void Game::initializeSwarm()
-{
-	ljSwarmBehavior = new LennardJonesSwarm(
-		&npcs, 
-		5000.0f,			 // attraction constant
-		10000.0f, 			 // repulsion constant
-		1.2f, 				 // attraction exponent
-		1.5f, 				 // repulsion exponent
-		6000.0f
-	);
-
-	int swarmSize = 200;
-	sf::Vector2u windowSize = window.getSize();
-
-	float spawnWidth = 200.0f;
-	float spawnHeight = 200.0f;
-	float startX = (windowSize.x - spawnWidth) / 2.0f;
-	float startY = (windowSize.y - spawnHeight) / 2.0f;
-
-	for (int i = 0; i < swarmSize; ++i) {
-        float x = startX + static_cast<float>(rand()) / RAND_MAX * spawnWidth;
-        float y = startY + static_cast<float>(rand()) / RAND_MAX * spawnHeight;
-        
-		NPC* npc = new NPC("ASSETS/IMAGES/bee.png");
-		npc->setPosition(sf::Vector2f(x, y));
-		npc->setSteeringBehavior(ljSwarmBehavior);
-		npcs.push_back(npc);
-    } 
-
-	instructionsText.setString("Swarming Demonstration\nNumber of bees in swarm: " + std::to_string(npcs.size()));
-}
-
-void Game::cleanupSwarm()
-{
-	// Clear the vector so that all NPCs are deleted and memory is freed
-	for (NPC* npc : npcs) {
-		delete npc;
-	}
-	npcs.clear();
-
-	delete ljSwarmBehavior;
-	ljSwarmBehavior = nullptr;
 }
 
 void Game::run()
@@ -163,16 +143,29 @@ void Game::update(sf::Time t_deltaTime)
 {
 	checkKeyboardState();
 
-	for (NPC* npc : npcs) {
-		npc->update(window.getSize(), t_deltaTime);
+	player->handleInput(t_deltaTime);
+
+	sf::Vector2u windowSize = window.getSize();
+	player->update(windowSize, t_deltaTime);
+
+	for (auto& enemy : enemies)
+	{
+		enemy->update(windowSize, t_deltaTime);
+
+		if (enemy->canSeePlayer(player->getSprite()))
+		{
+			enemy->setVisionConeColor(sf::Color(255, 0, 0, 80));
+		}
+		else
+		{
+			enemy->setVisionConeColor(sf::Color(255, 255, 0, 80));
+		}
 	}
 
 	if (exitGame)
 	{
 		window.close();
 	}
-
-
 }
 
 
@@ -180,11 +173,23 @@ void Game::render()
 {
 	window.clear(sf::Color::Black);
 
-	window.draw(instructionsText);
-
-	for (const NPC* npc : npcs) {
-		window.draw(npc->getSprite());
+	for (const auto& star : stars)
+	{
+		window.draw(star);
 	}
+
+	player->draw(window);
+
+	for (size_t i = 0; i < enemies.size(); ++i)
+    {
+        enemies[i]->draw(window);
+        
+        enemyBehaviourText.setString(enemies[i]->getBehaviourName());
+        enemyBehaviourText.setPosition(enemies[i]->getPosition() + sf::Vector2f(-20.0f, -40.0f));
+        window.draw(enemyBehaviourText);
+    }
+
+	window.draw(instructionsText);
 	
 	window.display();
 }
