@@ -27,7 +27,7 @@ void NPC::update(sf::Vector2u windowSize, sf::Time deltaTime)
         move(steering.linear, deltaTime);
     }
 
-	//wrapAroundScreen(windowSize);
+	wrapAroundScreen(windowSize);
 }
 
 void NPC::setSteeringBehavior(SteeringBehaviour* behavior)

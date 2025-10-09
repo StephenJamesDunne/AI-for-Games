@@ -216,7 +216,7 @@ sf::Vector2f LennardJonesSwarm::calculateLJForce(const sf::Vector2f& pos1, const
     sf::Vector2f direction = pos1 - pos2;
     float distance = MathUtils::vectorLength(direction);
 
-	const float minDistance = 2.0f; // to prevent division by zero
+	const float minDistance = 0.5f; // to prevent division by zero
     if (distance < minDistance)
     {
 		distance = minDistance;
