@@ -36,9 +36,6 @@ private:
 	Player* player;
 	std::vector<std::unique_ptr<Enemy>> enemies;
 
-	std::vector<bool> enemyActiveStates;
-	std::vector<std::unique_ptr<SteeringBehaviour>> enemyBehaviours;
-
 	std::vector<sf::CircleShape> stars;
 	void generateStars();
 

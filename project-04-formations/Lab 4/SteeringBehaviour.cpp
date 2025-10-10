@@ -177,7 +177,7 @@ SteeringOutput Formation::getSteering(const Entity& entity, sf::Time deltaTime)
 {
     SteeringOutput steering;
 
-    // Calculate the desired formation position
+    // Get the desired formation position
     sf::Vector2f targetPosition = calculateTargetPosition();
     
     // Use Arrive behavior to move into formation position
@@ -222,16 +222,14 @@ SteeringOutput Formation::getSteering(const Entity& entity, sf::Time deltaTime)
     return steering;
 }
 
+// Function to apply both the leader's position and orientation to get the target formation position
 sf::Vector2f Formation::calculateTargetPosition() const
 {
-	// Get base offset for the formation position
     sf::Vector2f baseOffset = getFormationOffset();
 
-	// Rotate offset based on leader's orientation
 	float leaderRotation = leader->getSprite().getRotation().asDegrees();
     sf::Vector2f rotatedOffset = rotateVector(baseOffset, leaderRotation);
 
-	// Return the target position relative to the leader's position
     return leader->getPosition() + rotatedOffset;
 }
 

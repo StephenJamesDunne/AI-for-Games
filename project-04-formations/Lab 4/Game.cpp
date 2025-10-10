@@ -44,9 +44,6 @@ Game::Game()
 
 	enemies.push_back(std::make_unique<Enemy>("ASSETS/IMAGES/enemy3.png", 
     	std::make_unique<Formation>(player, Formation::Position::TAIL), 400.0f));
-
-    // all enemies start active
-    enemyActiveStates.resize(enemies.size(), true);
 }
 
 Game::~Game()
@@ -111,7 +108,6 @@ void Game::processEvents()
 	}
 }
 
-
 void Game::processKeys(const std::optional<sf::Event> t_event)
 {
 	if (!t_event.has_value())
@@ -126,7 +122,6 @@ void Game::processKeys(const std::optional<sf::Event> t_event)
 		exitGame = true;
 	}
 }
-
 
 void Game::checkKeyboardState()
 {
@@ -148,15 +143,6 @@ void Game::update(sf::Time t_deltaTime)
 	for (auto& enemy : enemies)
 	{
 		enemy->update(windowSize, t_deltaTime);
-
-		if (enemy->canSeePlayer(player->getSprite()))
-		{
-			enemy->setVisionConeColor(sf::Color(255, 0, 0, 80));
-		}
-		else
-		{
-			enemy->setVisionConeColor(sf::Color(255, 255, 0, 80));
-		}
 	}
 
 	if (exitGame)
@@ -170,6 +156,7 @@ void Game::render()
 {
 	window.clear(sf::Color::Black);
 
+	// Background of stars
 	for (const auto& star : stars)
 	{
 		window.draw(star);
@@ -177,6 +164,7 @@ void Game::render()
 
 	player->draw(window);
 
+	// Draw enemies, attach corresponding behaviour text above each enemy
 	for (size_t i = 0; i < enemies.size(); ++i)
     {
         enemies[i]->draw(window);

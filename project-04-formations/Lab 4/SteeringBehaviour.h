@@ -77,6 +77,7 @@ public:
     };
 
     // Formation behavior constants
+	// Made these static constexpr to avoid multiple definitions error
     static constexpr float DEFAULT_MAX_ACCELERATION = 1200.0f;
     static constexpr float DEFAULT_MAX_SPEED = 600.0f;
     static constexpr float DEFAULT_SLOWING_RADIUS = 120.0f;
