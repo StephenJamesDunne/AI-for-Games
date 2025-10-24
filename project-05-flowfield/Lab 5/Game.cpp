@@ -68,6 +68,10 @@ void Game::processKeys(const std::optional<sf::Event> t_event)
 	{
 		flowField->toggleCostField();
 	}
+	else if (sf::Keyboard::Key::Num2 == newKeypress->code)
+	{
+		flowField->toggleIntegrationField();
+	}
 }
 
 void Game::processMouseClick(const std::optional<sf::Event> t_event)

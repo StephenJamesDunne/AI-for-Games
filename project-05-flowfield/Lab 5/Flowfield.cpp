@@ -2,14 +2,15 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include <cmath>
 
 FlowField::FlowField(int w, int h, float size)
     : gridWidth(w), gridHeight(h), tileSize(size)
 {
-	// Resize grid to specified width and height
+    // Resize grid to specified width and height
     grid.resize(gridHeight, std::vector<Tile>(gridWidth));
 
-	// Reserve to help with performance since grid size is constant
+    // Reserve to help with performance since grid size is constant
     tileShapes.reserve(gridWidth * gridHeight);
     for (int y = 0; y < gridHeight; y++)
     {
@@ -24,19 +25,19 @@ FlowField::FlowField(int w, int h, float size)
         }
     }
 
-	UIBox.setSize(sf::Vector2f(UI_WIDTH, gridHeight * tileSize));
-	UIBox.setPosition(sf::Vector2f(0.0f, 0.0f));
+    UIBox.setSize(sf::Vector2f(UI_WIDTH, gridHeight * tileSize));
+    UIBox.setPosition(sf::Vector2f(0.0f, 0.0f));
     UIBox.setFillColor(sf::Color(40, 40, 50, 255));
-	UIBox.setOutlineColor(sf::Color(100, 100, 120));
-	UIBox.setOutlineThickness(2.0f);
+    UIBox.setOutlineColor(sf::Color(100, 100, 120));
+    UIBox.setOutlineThickness(2.0f);
 
     instructionsText.setCharacterSize(24);
     instructionsText.setFillColor(sf::Color(220, 220, 220));
-	instructionsText.setOutlineColor(sf::Color::Black);
-	instructionsText.setOutlineThickness(2.0f);
+    instructionsText.setOutlineColor(sf::Color::Black);
+    instructionsText.setOutlineThickness(2.0f);
     instructionsText.setPosition({ 10.0f, 10.0f });
     instructionsText.setString(
-        "Flowfield Pathfinding\n\nInstructions:\n\n\nSet goal node\nwith left click\n\nSet start node\nwith right click\n\nToggle cost field\nwith '1'"
+        "Flowfield Pathfinding\n\nInstructions:\n\n\nSet goal node\nwith left click\n\nSet start node\nwith right click\n\nToggle cost field\nwith '1'\n\nToggle integration\nwith '2'"
     );
 
     costText.setCharacterSize(14);
@@ -44,49 +45,48 @@ FlowField::FlowField(int w, int h, float size)
     costText.setOutlineColor(sf::Color::Black);
     costText.setOutlineThickness(1.0f);
 
-    createCostField();
+    initializeTerrain();
 }
 
-// Step 1: Create Cost Field
-// Set base cost of travelling to each tile
-void FlowField::createCostField()
+// Initialize terrain costs (passable tiles and obstacles)
+void FlowField::initializeTerrain()
 {
-    // Initialize all tiles with default traversal cost
+    // Initialize all tiles with default terrain cost
     for (int y = 0; y < gridHeight; y++)
     {
         for (int x = 0; x < gridWidth; x++)
         {
-			grid[y][x].cost = 1; // Normal passable tile
+            grid[y][x].terrainCost = 1; // Normal passable tile
         }
     }
 
     // Create a vertical wall
     for (int y = 10; y < 20; y++)
     {
-        grid[y][25].cost = 255;
+        grid[y][25].terrainCost = 255;
     }
 
     // Create a horizontal wall
     for (int x = 10; x < 20; x++)
     {
-        grid[25][x].cost = 255;
+        grid[25][x].terrainCost = 255;
     }
 }
 
-// Step 2: Calculate Integration Field
-void FlowField::createIntegrationField()
+// Step 1: Create Cost Field - Calculate path distance from goal to every tile
+void FlowField::createCostField()
 {
-	// Reset all values in case goal changes
+    // Reset all path distances
     for (int y = 0; y < gridHeight; y++)
     {
         for (int x = 0; x < gridWidth; x++)
         {
-            grid[y][x].integrationCost = -1;
+            grid[y][x].cost = -1; // -1 = unvisited
         }
     }
 
-    // Check if goal is valid
-    if (goalPosition.x < 0 || goalPosition.y < 0 || !isValid(static_cast<int>(goalPosition.x), static_cast<int>(goalPosition.y)))
+    if (goalPosition.x < 0 || goalPosition.y < 0 ||
+        !isValid(static_cast<int>(goalPosition.x), static_cast<int>(goalPosition.y)))
     {
         return;
     }
@@ -94,25 +94,19 @@ void FlowField::createIntegrationField()
     int goalX = static_cast<int>(goalPosition.x);
     int goalY = static_cast<int>(goalPosition.y);
 
-	// Goal can't be on an obstacle
-    if (grid[goalY][goalX].cost == 255)
+    // Check if goal is on an obstacle
+    if (grid[goalY][goalX].terrainCost == 255)
     {
         return;
     }
 
-    // Bushfire algorithm:
-	// Use a queue and start from goal node, explore neighbors in breadth-first search
-	// Check all 8 directions from current tile for valid neighbors
-	// Update their integration cost if -1 (unvisited tile), or found a shorter path to goal
-	// Push valid neighbors to queue for further exploration
+    // Mark goal with path distance 0
+    grid[goalY][goalX].cost = 0;
 
     std::queue<sf::Vector2f> validTiles;
-
-    grid[goalY][goalX].integrationCost = 0;
     validTiles.push(sf::Vector2f(goalX, goalY));
 
-	// All 8 possible neighbor directions
-	// Up, Down, Left, Right, and 4 Diagonals
+    // All 8 neighbor directions
     const int dx[] = { 0, 0, -1, 1, -1, 1, -1, 1 };
     const int dy[] = { -1, 1, 0, 0, -1, -1, 1, 1 };
 
@@ -121,36 +115,66 @@ void FlowField::createIntegrationField()
         sf::Vector2f current = validTiles.front();
         validTiles.pop();
 
-        int currentX = current.x;
-        int currentY = current.y;
-        int currentIntegration = grid[currentY][currentX].integrationCost;
+        int currentX = static_cast<int>(current.x);
+        int currentY = static_cast<int>(current.y);
+        int currentCost = grid[currentY][currentX].cost;
 
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i < 8; i++)
         {
             int neighborX = currentX + dx[i];
             int neighborY = currentY + dy[i];
 
-            // Skip if not a valid tile (outside the bounds of the grid height/width, or under UI)
+            // Skip if out of bounds
             if (!isValid(neighborX, neighborY))
             {
                 continue;
             }
 
-            // Skip if obstacle
-            if (grid[neighborY][neighborX].cost == 255)
+            // Skip obstacles
+            if (grid[neighborY][neighborX].terrainCost == 255)
             {
                 continue;
             }
 
-            // Calculate new integration value
-            int newIntegration = currentIntegration + grid[neighborY][neighborX].cost;
-
-            // If unvisited OR we found a shorter path
-            if (grid[neighborY][neighborX].integrationCost == -1 || newIntegration < grid[neighborY][neighborX].integrationCost)
+            // If unmarked, mark with path distance + 1
+            if (grid[neighborY][neighborX].cost == -1)
             {
-                grid[neighborY][neighborX].integrationCost = newIntegration;
+                grid[neighborY][neighborX].cost = currentCost + 1;
                 validTiles.push(sf::Vector2f(neighborX, neighborY));
             }
+        }
+    }
+}
+
+// Step 2: Calculate Integration Field - Euclidean distance + cost field value
+void FlowField::createIntegrationField()
+{
+    // Cost field needs to be created first
+    if (goalPosition.x < 0 || goalPosition.y < 0)
+        return;
+
+    int goalX = static_cast<int>(goalPosition.x);
+    int goalY = static_cast<int>(goalPosition.y);
+
+    // For each tile, integration = cost field + Euclidean distance to goal
+    for (int y = 0; y < gridHeight; y++)
+    {
+        for (int x = 0; x < gridWidth; x++)
+        {
+            // If tile is unreachable (cost == -1) or is an obstacle
+            if (grid[y][x].cost == -1 || grid[y][x].terrainCost == 255)
+            {
+                grid[y][x].integrationCost = -1;
+                continue;
+            }
+
+            // Calculate Euclidean distance from this tile to goal
+            float dx = static_cast<float>(x - goalX);
+            float dy = static_cast<float>(y - goalY);
+            float euclideanDist = std::sqrt(dx * dx + dy * dy);
+
+            // Integration = cost field + Euclidean distance
+            grid[y][x].integrationCost = grid[y][x].cost + static_cast<int>(euclideanDist);
         }
     }
 }
@@ -161,15 +185,16 @@ void FlowField::setGoal(sf::Vector2f worldPos)
     if (mouseIsInUI(worldPos) || tileIsObstacle(worldPos))
     {
         return;
-	}
+    }
 
     sf::Vector2f gridPos = worldToGrid(worldPos);
 
-    if (isValid(gridPos.x, gridPos.y))
+    if (isValid(static_cast<int>(gridPos.x), static_cast<int>(gridPos.y)))
     {
         if (gridPos.x != startPosition.x || gridPos.y != startPosition.y)
         {
             goalPosition = gridPos;
+            createCostField();
             createIntegrationField();
         }
     }
@@ -185,7 +210,7 @@ void FlowField::setStart(sf::Vector2f worldPos)
 
     sf::Vector2f gridPos = worldToGrid(worldPos);
 
-    if (isValid(gridPos.x, gridPos.y))
+    if (isValid(static_cast<int>(gridPos.x), static_cast<int>(gridPos.y)))
     {
         if (gridPos.x != goalPosition.x || gridPos.y != goalPosition.y)
         {
@@ -196,24 +221,24 @@ void FlowField::setStart(sf::Vector2f worldPos)
 
 bool FlowField::mouseIsInUI(sf::Vector2f mousePos) const
 {
-	return mousePos.x <= UI_WIDTH;
+    return mousePos.x <= UI_WIDTH;
 }
 
 bool FlowField::tileIsObstacle(sf::Vector2f mousePos) const
 {
     sf::Vector2f gridPos = worldToGrid(mousePos);
-    if (isValid(gridPos.x, gridPos.y))
+    if (isValid(static_cast<int>(gridPos.x), static_cast<int>(gridPos.y)))
     {
-        return grid[static_cast<int>(gridPos.y)][static_cast<int>(gridPos.x)].cost == 255;
+        return grid[gridPos.y][gridPos.x].terrainCost == 255;
     }
     return false;
 }
 
 void FlowField::render(sf::RenderWindow& window)
 {
-    for (int y = 0; y < gridHeight; ++y)
+    for (int y = 0; y < gridHeight; y++)
     {
-        for (int x = 0; x < gridWidth; ++x)
+        for (int x = 0; x < gridWidth; x++)
         {
             int index = y * gridWidth + x;
 
@@ -225,10 +250,10 @@ void FlowField::render(sf::RenderWindow& window)
             {
                 tileShapes[index].setFillColor(sf::Color(50, 50, 200)); // Blue for start node
             }
-            else if (grid[y][x].cost == 255)
+            else if (grid[y][x].terrainCost == 255)
             {
-                tileShapes[index].setFillColor(sf::Color(255, 0, 0)); // Dark grey for obstacles
-			}
+                tileShapes[index].setFillColor(sf::Color(255, 0, 0)); // Red for obstacles
+            }
             else
             {
                 tileShapes[index].setFillColor(sf::Color(10, 10, 10)); // Default grey colour
@@ -236,23 +261,32 @@ void FlowField::render(sf::RenderWindow& window)
 
             window.draw(tileShapes[index]);
 
-            // Draw cost values if cost field is toggled on
-            if (showCostField)
+            if (displayMode != DisplayMode::NONE)
             {
-                int integrationValue = grid[y][x].integrationCost;
+                int displayValue;
+
+                if (displayMode == DisplayMode::COST_FIELD)
+                {
+                    displayValue = grid[y][x].cost;
+                }
+                else  // INTEGRATION_FIELD
+                {
+                    displayValue = grid[y][x].integrationCost;
+                }
+
                 std::string displayStr;
 
-                if (grid[y][x].cost == 255)
+                if (grid[y][x].terrainCost == 255)
                 {
                     displayStr = "X"; // Show "X" for obstacles
                 }
-                else if (integrationValue == -1)
+                else if (displayValue == -1)
                 {
                     displayStr = "-"; // Show "-" for unreachable tiles
                 }
                 else
                 {
-                    displayStr = std::to_string(integrationValue);
+                    displayStr = std::to_string(displayValue);
                 }
 
                 costText.setString(displayStr);
@@ -267,8 +301,8 @@ void FlowField::render(sf::RenderWindow& window)
         }
     }
 
-	window.draw(UIBox);
-	window.draw(instructionsText);
+    window.draw(UIBox);
+    window.draw(instructionsText);
 }
 
 // Convert mouse screen position to grid coordinates
@@ -288,6 +322,7 @@ bool FlowField::loadFont(const std::string& fontPath)
     if (uiFont.openFromFile(fontPath))
     {
         instructionsText.setFont(uiFont);
+        costText.setFont(uiFont);
         return true;
     }
     return false;
@@ -295,5 +330,16 @@ bool FlowField::loadFont(const std::string& fontPath)
 
 void FlowField::toggleCostField()
 {
-    showCostField = !showCostField;
+    if (displayMode == DisplayMode::COST_FIELD)
+        displayMode = DisplayMode::NONE;
+    else
+        displayMode = DisplayMode::COST_FIELD;
+}
+
+void FlowField::toggleIntegrationField()
+{
+    if (displayMode == DisplayMode::INTEGRATION_FIELD)
+        displayMode = DisplayMode::NONE;
+    else
+		displayMode = DisplayMode::INTEGRATION_FIELD;
 }
