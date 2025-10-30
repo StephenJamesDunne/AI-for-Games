@@ -17,7 +17,7 @@ FlowField::FlowField(int w, int h, float size)
         for (int x = 0; x < gridWidth; x++)
         {
             sf::RectangleShape rect(sf::Vector2f(tileSize - 2.0f, tileSize - 2.0f));
-            rect.setPosition({ x * tileSize, y * tileSize });
+            rect.setPosition({x * tileSize, y * tileSize});
             rect.setFillColor(sf::Color(70, 70, 70));
             rect.setOutlineColor(sf::Color(40, 40, 40));
             rect.setOutlineThickness(1.0f);
@@ -35,10 +35,9 @@ FlowField::FlowField(int w, int h, float size)
     instructionsText.setFillColor(sf::Color(220, 220, 220));
     instructionsText.setOutlineColor(sf::Color::Black);
     instructionsText.setOutlineThickness(2.0f);
-    instructionsText.setPosition({ 10.0f, 10.0f });
+    instructionsText.setPosition({10.0f, 10.0f});
     instructionsText.setString(
-        "Flowfield Pathfinding\n\nInstructions:\n\n\nSet goal node\nwith left click\n\nSet start node\nwith right click\n\nToggle cost field\nwith '1'\n\nToggle integration\nwith '2'"
-    );
+        "Flowfield Pathfinding\n\nInstructions:\n\n\nSet goal node\nwith left click\n\nSet start node\nwith right click\n\nToggle cost field\nwith '1'\n\nToggle heatmap\nwith '2'\n\nToggle integration\nwith '3'\n\nToggle vector field\nwith '4'");
 
     costText.setCharacterSize(14);
     costText.setFillColor(sf::Color::White);
@@ -107,8 +106,8 @@ void FlowField::createCostField()
     validTiles.push(sf::Vector2f(goalX, goalY));
 
     // All 8 neighbor directions
-    const int dx[] = { 0, 0, -1, 1, -1, 1, -1, 1 };
-    const int dy[] = { -1, 1, 0, 0, -1, -1, 1, 1 };
+    const int dx[] = {0, 0, -1, 1, -1, 1, -1, 1};
+    const int dy[] = {-1, 1, 0, 0, -1, -1, 1, 1};
 
     while (!validTiles.empty())
     {
@@ -119,28 +118,27 @@ void FlowField::createCostField()
         int currentY = static_cast<int>(current.y);
         int currentCost = grid[currentY][currentX].cost;
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < NEIGHBOUR_COUNT; i++)
         {
-            int neighborX = currentX + dx[i];
-            int neighborY = currentY + dy[i];
+            int neighbourX = currentX + DX[i];
+            int neighbourY = currentY + DY[i];
 
-            // Skip if out of bounds
-            if (!isValid(neighborX, neighborY))
-            {
+            if (!isValid(neighbourX, neighbourY))
                 continue;
-            }
 
-            // Skip obstacles
-            if (grid[neighborY][neighborX].terrainCost == 255)
-            {
+            if (grid[neighbourY][neighbourX].terrainCost == 255)
                 continue;
-            }
 
-            // If unmarked, mark with path distance + 1
-            if (grid[neighborY][neighborX].cost == -1)
+            if (grid[neighbourY][neighbourX].cost == -1)
             {
-                grid[neighborY][neighborX].cost = currentCost + 1;
-                validTiles.push(sf::Vector2f(neighborX, neighborY));
+                grid[neighbourY][neighbourX].cost = currentCost + 1;
+
+                if (grid[neighbourY][neighbourX].cost > maxCostValue)
+                {
+                    maxCostValue = grid[neighbourY][neighbourX].cost;
+                }
+
+                validTiles.push(sf::Vector2f(neighbourX, neighbourY));
             }
         }
     }
@@ -174,8 +172,75 @@ void FlowField::createIntegrationField()
             float euclideanDist = std::sqrt(dx * dx + dy * dy);
 
             // Integration = cost field + Euclidean distance
-            grid[y][x].integrationCost = grid[y][x].cost + static_cast<int>(euclideanDist);
+            grid[y][x].integrationCost = grid[y][x].cost * tileSize + static_cast<int>(euclideanDist);
         }
+    }
+
+	// Get the flow direction for each tile after all integration costs are calculated
+    for (int y = 0; y < gridHeight; y++)
+    {
+        for (int x = 0; x < gridWidth; x++)
+        {
+            grid[y][x].flowDirection = getFlowDirection(x, y);
+        }
+	}
+}
+
+// Step 3: Create visualization of Flow Field using integration costs and flow directions
+void FlowField::createVectorField(sf::RenderWindow &window, int x, int y, sf::Vector2i direction) const
+{
+    if (direction.x == 0 && direction.y == 0)
+        return;
+
+	// Staring point = center of tile
+    sf::Vector2f start(x * tileSize + tileSize / 2.0f, y * tileSize + tileSize / 2.0f);
+
+	// End point = direction to the goal scaled down to fit in tile
+    sf::Vector2f end = start + sf::Vector2f(direction.x, direction.y) * (tileSize / 2.5f);
+
+    sf::VertexArray arrow(sf::PrimitiveType::Lines, 2);
+    arrow[0].position = start;
+    arrow[0].color = sf::Color::White;
+    arrow[1].position = end;
+    arrow[1].color = sf::Color::White;
+
+    window.draw(arrow);
+
+    // Calculate arrowhead
+    sf::Vector2f arrowDir = end - start;
+    float length = std::sqrt(arrowDir.x * arrowDir.x + arrowDir.y * arrowDir.y);
+
+    if (length > 0)
+    {
+        // Normalize direction
+        arrowDir.x /= length;
+        arrowDir.y /= length;
+
+        // Perpendicular vector for arrowhead wings
+        sf::Vector2f perpendicular(-arrowDir.y, arrowDir.x);
+
+        // Arrowhead size
+        float headLength = tileSize / 6.0f;
+        float headWidth = tileSize / 8.0f;
+
+        // Calculate two points for arrowhead wings
+        sf::Vector2f headPoint1 = end - arrowDir * headLength + perpendicular * headWidth;
+        sf::Vector2f headPoint2 = end - arrowDir * headLength - perpendicular * headWidth;
+
+        // Draw arrowhead lines
+        sf::VertexArray head1(sf::PrimitiveType::Lines, 2);
+        head1[0].position = end;
+        head1[0].color = sf::Color::White;
+        head1[1].position = headPoint1;
+        head1[1].color = sf::Color::White;
+        window.draw(head1);
+
+        sf::VertexArray head2(sf::PrimitiveType::Lines, 2);
+        head2[0].position = end;
+        head2[0].color = sf::Color::White;
+        head2[1].position = headPoint2;
+        head2[1].color = sf::Color::White;
+        window.draw(head2);
     }
 }
 
@@ -234,7 +299,7 @@ bool FlowField::tileIsObstacle(sf::Vector2f mousePos) const
     return false;
 }
 
-void FlowField::render(sf::RenderWindow& window)
+void FlowField::render(sf::RenderWindow &window)
 {
     for (int y = 0; y < gridHeight; y++)
     {
@@ -242,6 +307,7 @@ void FlowField::render(sf::RenderWindow& window)
         {
             int index = y * gridWidth + x;
 
+            // Draw tiles based on their state
             if (x == goalPosition.x && y == goalPosition.y)
             {
                 tileShapes[index].setFillColor(sf::Color(50, 200, 50)); // Green for goal node
@@ -254,6 +320,26 @@ void FlowField::render(sf::RenderWindow& window)
             {
                 tileShapes[index].setFillColor(sf::Color(255, 0, 0)); // Red for obstacles
             }
+            else if (showHeatmap && grid[y][x].cost != -1 && maxCostValue > 0)
+            {
+                int cost = grid[y][x].cost;
+                sf::Color color;
+
+                if (cost <= maxCostValue * 0.1f)
+                    color = sf::Color(255, 245, 200); // Light yellow
+                else if (cost <= maxCostValue * 0.3f)
+                    color = sf::Color(255, 220, 160); // Pale orange
+                else if (cost <= maxCostValue * 0.5f)
+                    color = sf::Color(255, 190, 120); // Tan
+                else if (cost <= maxCostValue * 0.7f)
+                    color = sf::Color(255, 160, 90); // Light brown
+                else if (cost <= maxCostValue * 0.9f)
+                    color = sf::Color(255, 120, 80); // Orange/red
+                else
+                    color = sf::Color(220, 60, 60); // Muted red
+
+                tileShapes[index].setFillColor(color);
+            }
             else
             {
                 tileShapes[index].setFillColor(sf::Color(10, 10, 10)); // Default grey colour
@@ -261,20 +347,20 @@ void FlowField::render(sf::RenderWindow& window)
 
             window.draw(tileShapes[index]);
 
+            // Draw UI text for cost/integration values
             if (displayMode != DisplayMode::NONE)
             {
-                int displayValue;
+                int displayValue = 0;
+                std::string displayStr;
 
                 if (displayMode == DisplayMode::COST_FIELD)
                 {
                     displayValue = grid[y][x].cost;
                 }
-                else  // INTEGRATION_FIELD
+                else if (displayMode == DisplayMode::INTEGRATION_FIELD)
                 {
                     displayValue = grid[y][x].integrationCost;
                 }
-
-                std::string displayStr;
 
                 if (grid[y][x].terrainCost == 255)
                 {
@@ -300,16 +386,67 @@ void FlowField::render(sf::RenderWindow& window)
             }
         }
     }
+    if (showVectorField)
+    {
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                if (grid[y][x].terrainCost == 255 || grid[y][x].integrationCost == -1)
+                    continue;
+
+                createVectorField(window, x, y, grid[y][x].flowDirection);
+            }
+        }
+    }
 
     window.draw(UIBox);
     window.draw(instructionsText);
+}
+
+// Get the vector/flow direction for a given tile
+sf::Vector2i FlowField::getFlowDirection(int x, int y) const
+{
+    // Skip the goal tile
+    if (x == static_cast<int>(goalPosition.x) && y == static_cast<int>(goalPosition.y))
+        return {0, 0};
+
+    // If unvisited for now, return no direction
+    if (grid[y][x].integrationCost == -1)
+        return { 0, 0 };
+
+    int lowestCost = INT_MAX;
+    sf::Vector2i bestDirection = { 0, 0 };
+
+    for (int i = 0; i < NEIGHBOUR_COUNT; i++)
+    {
+        int neighbourX = x + DX[i];
+        int neighbourY = y + DY[i];
+
+        // Check if neighbor is valid and reachable
+        if (isValid(neighbourX, neighbourY) &&
+            grid[neighbourY][neighbourX].integrationCost != -1 &&
+            grid[neighbourY][neighbourX].terrainCost != 255)
+        {
+            int neighbourCost = grid[neighbourY][neighbourX].integrationCost;
+
+            // Choose the neighbor with the lowest integration cost
+            if (neighbourCost < lowestCost)
+            {
+                lowestCost = neighbourCost;
+                bestDirection = sf::Vector2i(DX[i], DY[i]);
+            }
+        }
+    }
+
+    return bestDirection;
 }
 
 // Convert mouse screen position to grid coordinates
 sf::Vector2f FlowField::worldToGrid(sf::Vector2f worldPos) const
 {
     return sf::Vector2f(static_cast<int>(worldPos.x / tileSize),
-        static_cast<int>(worldPos.y / tileSize));
+                        static_cast<int>(worldPos.y / tileSize));
 }
 
 bool FlowField::isValid(int x, int y) const
@@ -317,7 +454,7 @@ bool FlowField::isValid(int x, int y) const
     return x >= 0 && x < gridWidth && y >= 0 && y < gridHeight;
 }
 
-bool FlowField::loadFont(const std::string& fontPath)
+bool FlowField::loadFont(const std::string &fontPath)
 {
     if (uiFont.openFromFile(fontPath))
     {
@@ -341,5 +478,16 @@ void FlowField::toggleIntegrationField()
     if (displayMode == DisplayMode::INTEGRATION_FIELD)
         displayMode = DisplayMode::NONE;
     else
-		displayMode = DisplayMode::INTEGRATION_FIELD;
+        displayMode = DisplayMode::INTEGRATION_FIELD;
+}
+
+// removed the enum version of this so that heatmap and cost/integration fields can be toggled independently
+void FlowField::toggleHeatmap()
+{
+    showHeatmap = !showHeatmap;
+}
+
+void FlowField::toggleVectorField()
+{
+    showVectorField = !showVectorField;
 }

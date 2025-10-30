@@ -70,7 +70,15 @@ void Game::processKeys(const std::optional<sf::Event> t_event)
 	}
 	else if (sf::Keyboard::Key::Num2 == newKeypress->code)
 	{
+		flowField->toggleHeatmap();
+	}
+	else if (sf::Keyboard::Key::Num3 == newKeypress->code)
+	{
 		flowField->toggleIntegrationField();
+	}
+	else if (sf::Keyboard::Key::Num4 == newKeypress->code)
+	{
+		flowField->toggleVectorField();
 	}
 }
 
