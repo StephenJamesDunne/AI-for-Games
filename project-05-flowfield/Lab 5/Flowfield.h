@@ -7,9 +7,9 @@
 struct Tile
 {
     int terrainCost = 1;                    // Terrain traversal cost: 1 = passable, 255 = obstacle
-    int cost = -1;                          // Path distance from goal (Step 1 Cost Field), -1 = unvisited
-    float integrationCost = -1.0f;               // Euclidean + cost field (Step 2 Integration Field), -1 = unvisited
-    sf::Vector2i flowDirection = {0, 0};    // Direction to lowest integration cost neighbor
+    int cost = -1;                          // (Step 1 Cost Field) Path distance from goal. -1 = unvisited
+    float integrationCost = -1.0f;          // (Step 2 Integration Field) Euclidean + cost field. -1 = unvisited
+    sf::Vector2i flowDirection = {0, 0};    // (Step 3 Vector field) Direction to lowest integration cost neighbor
 };
 
 class FlowField
@@ -103,7 +103,6 @@ private:
     bool tileIsObstacle(int x, int y) const;
 	bool tileIsReachable(int x, int y) const;
     sf::Vector2i getFlowDirection(int x, int y) const;
-    sf::Vector2i findBestFallbackDirection(int x, int y) const;
 	sf::Vector2f normalizeVector(sf::Vector2f vec) const;
 	bool isDiagonalBlocked(int fromX, int fromY, int toX, int toY) const;
 };
