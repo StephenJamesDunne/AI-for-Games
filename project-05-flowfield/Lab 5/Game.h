@@ -24,8 +24,8 @@ private:
 
 	// Flowfield instance
 	FlowField* flowField;
-	const int GRID_WIDTH = 50;
-	const int GRID_HEIGHT = 50;
+	const int GRID_WIDTH = 28;
+	const int GRID_HEIGHT = 27;
 	const float TILE_SIZE = 30.0f;
 
 	bool exitGame = false;

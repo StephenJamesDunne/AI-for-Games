@@ -80,6 +80,10 @@ void Game::processKeys(const std::optional<sf::Event> t_event)
 	{
 		flowField->toggleVectorField();
 	}
+	else if (sf::Keyboard::Key::Space == newKeypress->code)
+	{
+		flowField->resetNPC();
+	}
 }
 
 void Game::processMouseClick(const std::optional<sf::Event> t_event)
@@ -101,6 +105,11 @@ void Game::processMouseClick(const std::optional<sf::Event> t_event)
 		{
 			flowField->setStart(mousePos);
 		}
+		// Middle click: Toggle obstacle
+		else if (mousePress->button == sf::Mouse::Button::Middle)
+		{
+			flowField->toggleObstacle(mousePos);
+		}
 	}
 }
 
@@ -110,6 +119,8 @@ void Game::update(sf::Time t_deltaTime)
 	{
 		window.close();
 	}
+
+	flowField->findPath(t_deltaTime);
 }
 
 void Game::render()

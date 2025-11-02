@@ -8,7 +8,7 @@ struct Tile
 {
     int terrainCost = 1;                    // Terrain traversal cost: 1 = passable, 255 = obstacle
     int cost = -1;                          // Path distance from goal (Step 1 Cost Field), -1 = unvisited
-    int integrationCost = -1;               // Euclidean + cost field (Step 2 Integration Field), -1 = unvisited
+    float integrationCost = -1.0f;               // Euclidean + cost field (Step 2 Integration Field), -1 = unvisited
     sf::Vector2i flowDirection = {0, 0};    // Direction to lowest integration cost neighbor
 };
 
@@ -16,22 +16,38 @@ class FlowField
 {
 public:
     FlowField(int gridWidth, int gridHeight, float tileSize);
-    sf::Vector2f worldToGrid(sf::Vector2f worldPos) const;
+
+    // Coordinate conversions
+    sf::Vector2i worldToGrid(sf::Vector2f worldPos) const;
+    sf::Vector2f gridToWorld(int x, int y) const;
+    sf::Vector2f getTileCenter(int x, int y) const;
+
+    // Grid and flowfield generation
     void initializeTerrain();
     void createCostField();
     void createIntegrationField();
-    void createVectorField(sf::RenderWindow& window, int x, int y, sf::Vector2i direction) const;
+
+    // Rendering
+    void createFlowArrows(sf::RenderWindow& window, int x, int y, sf::Vector2i direction) const;
     void render(sf::RenderWindow& window);
+
+	// User interactions with the flowfield
     void setStart(sf::Vector2f worldPos);
     void setGoal(sf::Vector2f worldPos);
-    bool mouseIsInUI(sf::Vector2f mousePos) const;
-    bool tileIsObstacle(sf::Vector2f mousePos) const;
+	void toggleObstacle(sf::Vector2f worldPos);
     bool loadFont(const std::string& fontPath);
+
+    // Display toggles
     void toggleCostField();
     void toggleHeatmap();
-	void toggleIntegrationField();
+    void toggleIntegrationField();
     void toggleVectorField();
-    sf::Vector2i getFlowDirection(int x, int y) const;
+
+    // Visualization of NPC following the flow field
+    void findPath(sf::Time deltaTime);
+    void resetNPC();
+	void calculateShortestPath();
+	void drawShortestPath(sf::RenderWindow& window);
 
 private:
     enum class DisplayMode
@@ -48,19 +64,17 @@ private:
 	static constexpr int DX[NEIGHBOUR_COUNT] = { 0, 0, 1, -1, -1, 1, -1, 1 };
 	static constexpr int DY[NEIGHBOUR_COUNT] = { -1, 1, 0, 0, -1, -1, 1, 1 };
 
-	static bool isCardinalDirection(int direction) { return direction < 4; }
-
     int gridWidth;
     int gridHeight;
     float tileSize;
 
-	int maxCostValue{ 0 }; // For heatmap normalization in createCostField()
+	int maxCostValue{ 0 };          // Maximum cost value for heatmap scaling so that colors are relative to current costs
     bool showHeatmap = false;
     bool showVectorField = false;
 
     // Made these positions negative so the tile at (0,0) is not start or goal by default
-    sf::Vector2f startPosition{ -25.0f, -25.0f };
-    sf::Vector2f goalPosition{ -25.0f, -25.0f };
+    sf::Vector2i startPosition{ -1, -1 };
+    sf::Vector2i goalPosition{ -1, -1 };
 
     std::vector<std::vector<Tile>> grid;            // Grid of tiles for flowfield positions and costs
     std::vector<sf::RectangleShape> tileShapes;     // Visualization of squares on top of the grid
@@ -72,8 +86,26 @@ private:
     sf::Text instructionsText{ uiFont };
     sf::Text costText{ uiFont };
 
-	// Function to check if coordinates are within grid bounds
+	// Entity following the flow field
+	sf::CircleShape npc;
+	sf::Vector2f npcPos;
+	bool npcActive = false;
+	const float NPC_SPEED = 3.0f; // Grid tiles per second
+
+	// Shortest path visualization
+	std::vector<sf::Vector2i> shortestPath;
+	int currentPathIndex = 0;
+	bool showShortestPath = false;
+
+	// Helper functions
     bool isValid(int x, int y) const;
+    bool mouseIsInUI(sf::Vector2f mousePos) const;
+    bool tileIsObstacle(int x, int y) const;
+	bool tileIsReachable(int x, int y) const;
+    sf::Vector2i getFlowDirection(int x, int y) const;
+    sf::Vector2i findBestFallbackDirection(int x, int y) const;
+	sf::Vector2f normalizeVector(sf::Vector2f vec) const;
+	bool isDiagonalBlocked(int fromX, int fromY, int toX, int toY) const;
 };
 
 #endif
