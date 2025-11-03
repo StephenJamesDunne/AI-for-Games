@@ -26,7 +26,7 @@ private:
 	FlowField* flowField;
 	const int GRID_WIDTH = 28;
 	const int GRID_HEIGHT = 27;
-	const float TILE_SIZE = 30.0f;
+	const float TILE_SIZE = 60.0f;
 
 	bool exitGame = false;
 };

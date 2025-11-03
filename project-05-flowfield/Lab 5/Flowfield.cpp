@@ -29,7 +29,7 @@ FlowField::FlowField(int w, int h, float size)
     UIBox.setOutlineColor(sf::Color(100, 100, 120));
     UIBox.setOutlineThickness(2.0f);
 
-    instructionsText.setCharacterSize(24);
+    instructionsText.setCharacterSize(48);
     instructionsText.setFillColor(sf::Color(220, 220, 220));
     instructionsText.setOutlineColor(sf::Color::Black);
     instructionsText.setOutlineThickness(2.0f);
@@ -47,7 +47,7 @@ FlowField::FlowField(int w, int h, float size)
         " - Toggle vector field\n\twith '4'\n\n"
     );
 
-    costText.setCharacterSize(14);
+    costText.setCharacterSize(28);
     costText.setFillColor(sf::Color::White);
     costText.setOutlineColor(sf::Color::Black);
     costText.setOutlineThickness(1.0f);

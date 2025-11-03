@@ -81,7 +81,7 @@ private:
 
     // UI elements
     sf::RectangleShape UIBox;
-    const float UI_WIDTH = 210.0f;
+    const float UI_WIDTH = 420.0f;
     sf::Font uiFont;
     sf::Text instructionsText{ uiFont };
     sf::Text costText{ uiFont };

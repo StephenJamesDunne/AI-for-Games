@@ -2,7 +2,7 @@
 #include <iostream>
 
 Game::Game() :
-	window{ sf::VideoMode{ sf::Vector2u{1050U, 810U}, 32U }, "Flowfield - Cost Field" }
+	window{ sf::VideoMode{ sf::Vector2u{2100, 1620U}, 32U }, "Flowfield - Cost Field" }
 {
 	// Create flowfield when game object is created
 	flowField = new FlowField(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
